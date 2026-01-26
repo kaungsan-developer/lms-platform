@@ -33,6 +33,7 @@ import {
 } from "@/components/ui/card";
 
 import { SimpleEditor } from "@/components/tiptap-templates/simple/simple-editor";
+import DropZone from "@/components/drop-zone/drop-zone";
 
 const categories = [
   "Technology",
@@ -192,13 +193,7 @@ const AdminCreateCoursePage = () => {
                     {fieldState.invalid && (
                       <FieldError errors={[fieldState.error]} />
                     )}
-                    <Input
-                      {...field}
-                      id="fileKey"
-                      aria-invalid={fieldState.invalid}
-                      placeholder="Thumbnail Url"
-                      autoComplete="off"
-                    />
+                    <DropZone />
                     {fieldState.invalid && (
                       <FieldError errors={[fieldState.error]} />
                     )}

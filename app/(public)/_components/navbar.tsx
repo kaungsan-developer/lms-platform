@@ -10,6 +10,7 @@ const navbarItems = [
   { label: "Courses", href: "/courses" },
   { label: "About", href: "/about" },
   { label: "Contact", href: "/contact" },
+  { label: "Admin", href: "/admin" },
 ];
 const NavBar = async () => {
   const session = await auth.api.getSession({
