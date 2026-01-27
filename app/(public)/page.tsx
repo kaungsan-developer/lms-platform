@@ -1,7 +1,6 @@
 "use client";
-import { ModeToggle } from "@/components/mode-toggle";
-import { Button, buttonVariants } from "@/components/ui/button";
-import { signOutAction } from "../actions";
+import { buttonVariants } from "@/components/ui/button";
+
 import { useRouter } from "next/navigation";
 import { Badge } from "@/components/ui/badge";
 import { BadgeCheck } from "lucide-react";

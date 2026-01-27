@@ -3,18 +3,18 @@ import { Button } from "../ui/button";
 import { X } from "lucide-react";
 
 const DropZonePreview = ({
-  file,
-  setFile,
+  previewUrl,
+  setPreviewUrl,
 }: {
-  file: string;
-  setFile: (a: string | undefined) => void;
+  previewUrl: string;
+  setPreviewUrl: (a: string | undefined) => void;
 }) => {
   return (
     <div className="flex gap-4 h-full">
       <Image
-        src={file}
+        src={previewUrl}
         alt=""
-        onLoad={() => URL.revokeObjectURL(file)}
+        onLoad={() => URL.revokeObjectURL(previewUrl)}
         width={100}
         height={100}
         className="w-auto h-auto"
@@ -22,7 +22,7 @@ const DropZonePreview = ({
       <Button
         variant={"ghost"}
         type="button"
-        onClick={() => setFile(undefined)}
+        onClick={() => setPreviewUrl(undefined)}
       >
         <X />
       </Button>

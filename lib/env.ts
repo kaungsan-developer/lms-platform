@@ -8,10 +8,17 @@ export const env = createEnv({
     GOOGLE_CLIENT_ID: z.string().min(1),
     GOOGLE_CLIENT_SECRET: z.string().min(1),
     RESEND_API_KEY: z.string().min(1),
+    supabase_api_key: z.string().min(1),
+    supabase_project_url: z.string().min(1),
+  },
+  client: {
+    NEXT_PUBLIC_S3_BUCKET_NAME: z.string().min(1),
   },
 
   // If you're using Next.js < 13.4.4, you'll need to specify the runtimeEnv manually
 
   // For Next.js >= 13.4.4, you only need to destructure client variables:
-  experimental__runtimeEnv: {},
+  experimental__runtimeEnv: {
+    NEXT_PUBLIC_S3_BUCKET_NAME: process.env.NEXT_PUBLIC_S3_BUCKET_NAME,
+  },
 });
