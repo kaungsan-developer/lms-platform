@@ -23,8 +23,18 @@ export async function POST(request: Request) {
     const { data, error } = await supabase.storage
       .from("next-js-lms")
       .createSignedUploadUrl(`course-thumbnails/${uniqueFileName}`);
+
+    const { data: publicUrlResponse } = supabase.storage
+      .from("next-js-lms")
+      .getPublicUrl(`course-thumbnails/${uniqueFileName}`);
+
+    const response = {
+      signedUrl: data?.signedUrl,
+      publicUrl: publicUrlResponse.publicUrl,
+    };
+
     if (data) {
-      return NextResponse.json({ success: true, data });
+      return NextResponse.json(response);
     } else {
       console.log(error);
       return;

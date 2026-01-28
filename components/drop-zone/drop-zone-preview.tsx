@@ -3,9 +3,11 @@ import { Button } from "../ui/button";
 import { X } from "lucide-react";
 
 const DropZonePreview = ({
+  field,
   previewUrl,
   setPreviewUrl,
 }: {
+  field: any;
   previewUrl: string;
   setPreviewUrl: (a: string | undefined) => void;
 }) => {
@@ -22,7 +24,10 @@ const DropZonePreview = ({
       <Button
         variant={"ghost"}
         type="button"
-        onClick={() => setPreviewUrl(undefined)}
+        onClick={() => {
+          field.onChange(undefined);
+          setPreviewUrl(undefined);
+        }}
       >
         <X />
       </Button>

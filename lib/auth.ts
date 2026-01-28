@@ -1,11 +1,10 @@
-import "server-only";
-
 import { betterAuth } from "better-auth";
 import { prismaAdapter } from "better-auth/adapters/prisma";
 import prisma from "./prisma";
 import { env } from "./env";
 import { Resend } from "resend";
 import { nextCookies } from "better-auth/next-js";
+import { admin } from "better-auth/plugins";
 
 const resend = new Resend(env.RESEND_API_KEY);
 
@@ -35,5 +34,5 @@ export const auth = betterAuth({
     },
     autoSignInAfterVerification: true,
   },
-  plugins: [nextCookies()],
+  plugins: [admin(), nextCookies()],
 });

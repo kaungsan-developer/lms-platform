@@ -28,12 +28,15 @@ import {
   CardHeader,
   CardTitle,
   CardContent,
-  CardAction,
   CardDescription,
 } from "@/components/ui/card";
 
 import { SimpleEditor } from "@/components/tiptap-templates/simple/simple-editor";
 import DropZone from "@/components/drop-zone/drop-zone";
+import { toast } from "sonner";
+import { useRouter } from "next/navigation";
+import { useState, useTransition } from "react";
+import { Loader2Icon } from "lucide-react";
 
 const categories = [
   "Technology",
@@ -52,12 +55,15 @@ const levels = ["BEGINNER", "INTERMEDIATE", "ADVANCED"];
 const statuses = ["DRAFT", "PUBLISHED", "ARCHIVED"];
 
 const AdminCreateCoursePage = () => {
+  const router = useRouter();
+
+  const [isCreating, setIsCreating] = useState<boolean>(false);
   const { handleSubmit, control, getValues, setValue } = useForm({
     resolver: zodResolver(CourseSchema),
     defaultValues: {
       title: "",
       description: "",
-      fileKey: "",
+      image: undefined,
       level: "BEGINNER",
       duration: 1,
       smallDescription: "",
@@ -68,10 +74,68 @@ const AdminCreateCoursePage = () => {
     },
   });
 
-  const onSubmit = (data: z.infer<typeof CourseSchema>) => {
-    console.log(data);
-    console.log("Form submitted");
+  const imageUploader = async (file: File) => {
+    try {
+      const response = await fetch("/api/s3/upload", {
+        method: "POST",
+        body: JSON.stringify({
+          fileName: file.name,
+          contentType: file.type,
+        }),
+      });
+
+      if (!response.ok) {
+        toast.error("Failed to Upload File");
+        return;
+      }
+
+      const { signedUrl, publicUrl } = await response.json();
+
+      await fetch(signedUrl, {
+        method: "PUT",
+        body: file,
+        headers: {
+          "Content-type": file.type,
+        },
+      });
+
+      return publicUrl;
+    } catch (error) {
+      toast.error("Failed To Upload Image");
+      throw new Error();
+    }
   };
+
+  const onSubmit = async (data: z.infer<typeof CourseSchema>) => {
+    setIsCreating(true);
+    try {
+      const publicUrl = await imageUploader(data.image);
+      //remove image file from form data and only send uploaded image url to backend
+      const { image, ...rest } = data;
+      const payload = { ...rest, imageUrl: publicUrl };
+      const res = await fetch("/api/course/create", {
+        method: "POST",
+        headers: {
+          "Content-type": "application/json",
+        },
+        body: JSON.stringify(payload),
+      });
+
+      if (!res.ok) {
+        toast.error("Failed to create course");
+        return;
+      }
+
+      toast.success("New Course Created Successfully.");
+      setIsCreating(false);
+      router.push("/admin/courses");
+    } catch (error) {
+      toast.error("Failed to create course");
+      setIsCreating(false);
+      return;
+    }
+  };
+
   return (
     <div>
       <div className="flex justify-between">
@@ -185,15 +249,13 @@ const AdminCreateCoursePage = () => {
               />
 
               <Controller
-                name="fileKey"
+                name="image"
                 control={control}
                 render={({ field, fieldState }) => (
                   <Field>
-                    <FieldLabel htmlFor="fileKey">Thumbnail</FieldLabel>
-                    {fieldState.invalid && (
-                      <FieldError errors={[fieldState.error]} />
-                    )}
-                    <DropZone />
+                    <FieldLabel htmlFor="imageUrl">Image</FieldLabel>
+
+                    <DropZone field={field} isCreating={isCreating} />
                     {fieldState.invalid && (
                       <FieldError errors={[fieldState.error]} />
                     )}
@@ -356,8 +418,16 @@ const AdminCreateCoursePage = () => {
                 )}
               />
             </FieldGroup>
-            <Button type="submit" className="float-right mt-5">
-              Create Course
+            <Button
+              type="submit"
+              className="float-right mt-5"
+              disabled={isCreating}
+            >
+              {isCreating ? (
+                <Loader2Icon className="animate-spin" />
+              ) : (
+                "Create Course"
+              )}
             </Button>
           </CardContent>
         </Card>
