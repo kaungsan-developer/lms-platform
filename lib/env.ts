@@ -10,6 +10,7 @@ export const env = createEnv({
     RESEND_API_KEY: z.string().min(1),
     supabase_api_key: z.string().min(1),
     supabase_project_url: z.string().min(1),
+    ARCJET_KEY: z.string().min(1),
   },
   client: {
     NEXT_PUBLIC_S3_BUCKET_NAME: z.string().min(1),

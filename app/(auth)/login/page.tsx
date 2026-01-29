@@ -25,7 +25,6 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import { signInSchema } from "@/app/schemas/authSchema";
 import z from "zod";
 import { useRouter } from "next/navigation";
-import { signInAction } from "@/app/actions";
 
 export default function LoginPage() {
   const router = useRouter();
@@ -49,9 +48,6 @@ export default function LoginPage() {
           callbackURL: "/",
         },
         {
-          onSuccess: () => {
-            toast.success("Successfully signed in!");
-          },
           onError: (error) => {
             toast.error(`Error signing in: ${error.error.message}`);
           },
@@ -60,15 +56,30 @@ export default function LoginPage() {
     });
   };
 
-  const onSubmit = async (data: z.infer<typeof signInSchema>) => {
+  // sign in with email and password
+  const onSubmit = async (values: z.infer<typeof signInSchema>) => {
     startEmailTransition(async () => {
-      await signInAction(data)
-        .then(() => {
-          router.push("/");
-        })
-        .catch((error) => {
-          toast.error(error.message);
-        });
+      const { data, error } = await authClient.signIn.email(
+        {
+          email: values.email,
+          password: values.password,
+          callbackURL: "/",
+        },
+        {
+          onSuccess: () => {
+            router.push("/");
+            toast.success("Signed In Successfully.");
+          },
+        },
+      );
+
+      if (error) {
+        toast.error(error.message);
+        if (error.status === 403 && error.code === "EMAIL_NOT_VERIFIED") {
+          router.push("/verify-email");
+          return;
+        }
+      }
     });
   };
   return (

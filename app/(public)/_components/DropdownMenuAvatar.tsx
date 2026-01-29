@@ -15,9 +15,10 @@ import {
   CreditCardIcon,
   LogOutIcon,
 } from "lucide-react";
-import { signOutAction } from "@/app/actions";
+
 import { toast } from "sonner";
 import Link from "next/link";
+import { authClient } from "@/lib/auth-client";
 
 export function DropdownMenuAvatar({
   user,
@@ -25,13 +26,10 @@ export function DropdownMenuAvatar({
   user: { name: string; email: string };
 }) {
   const signOut = async () => {
-    await signOutAction()
-      .then(() => {
-        toast.success("Signed out successfully");
-      })
-      .catch(() => {
-        toast.error("Error signing out");
-      });
+    const { data, error } = await authClient.signOut();
+    if (error) {
+      return toast.error(error.message);
+    }
   };
   return (
     <DropdownMenu>

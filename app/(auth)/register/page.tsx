@@ -19,9 +19,10 @@ import { useForm } from "react-hook-form";
 import z from "zod";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { registerSchema } from "@/app/schemas/authSchema";
-import { signUpAction } from "@/app/actions";
+// import { signUpAction } from "@/app/actions";
 import { useRouter } from "next/navigation";
 import { toast } from "sonner";
+import { authClient } from "@/lib/auth-client";
 
 export default function RegisterPage({
   ...props
@@ -35,14 +36,20 @@ export default function RegisterPage({
       password: "",
     },
   });
-  const onSubmit = async (data: z.infer<typeof registerSchema>) => {
-    const result = await signUpAction(data);
-    if (result.success) {
-      router.push("/verify-email");
-      toast.success("Account created successfully!");
-    } else {
-      toast.error("Failed to create account. Please try again.");
-    }
+  const onSubmit = async (values: z.infer<typeof registerSchema>) => {
+    const { data, error } = await authClient.signUp.email(values, {
+      onRequest: (ctx) => {
+        //show loading
+      },
+      onSuccess: (ctx) => {
+        toast.success("sign up success");
+        router.push("/");
+      },
+      onError: (ctx) => {
+        // display the error message
+        alert(ctx.error.message);
+      },
+    });
   };
 
   return (

@@ -1,9 +1,10 @@
+"use client";
 import { ModeToggle } from "@/components/mode-toggle";
 import { buttonVariants } from "@/components/ui/button";
 import Link from "next/link";
 import { DropdownMenuAvatar } from "./DropdownMenuAvatar";
-import { auth } from "@/lib/auth";
-import { headers } from "next/headers";
+
+import { authClient } from "@/lib/auth-client";
 
 const navbarItems = [
   { label: "Home", href: "/" },
@@ -12,10 +13,15 @@ const navbarItems = [
   { label: "Contact", href: "/contact" },
   { label: "Admin", href: "/admin" },
 ];
-const NavBar = async () => {
-  const session = await auth.api.getSession({
-    headers: await headers(),
-  });
+const NavBar = () => {
+  // const session = await authClient.getSession();
+  const {
+    data: session,
+    isPending, //loading state
+    error, //error object
+    refetch, //refetch the session
+  } = authClient.useSession();
+
   return (
     <div className="sticky px-10 py-3 border-b bg-background/90 backdrop-blur-sm top-0 z-50">
       <div className="flex justify-between items-center">
