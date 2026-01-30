@@ -8,8 +8,7 @@ import {
   SlidingWindowRateLimitOptions,
 } from "@arcjet/next";
 import aj from "@/lib/arcjet";
-import { auth } from "@/lib/auth";
-import { headers } from "next/headers";
+import { isAdmin } from "@/lib/dal";
 
 const botOptions = {
   mode: "LIVE",
@@ -23,68 +22,82 @@ const restrictiveRateLimitSettings = {
 } satisfies SlidingWindowRateLimitOptions<[]>;
 
 export async function POST(request: Request) {
-  const session = await auth.api.getSession({
-    headers: await headers(),
-  });
+  const session = await isAdmin();
+
   if (!session) {
-    return NextResponse.json({ message: "Unauthorized" }, { status: 403 });
+    return NextResponse.json(
+      { data: null, message: "Forbidden", error: true, success: false },
+      { status: 403 },
+    );
   }
 
   const userId = session?.user.id;
-  const decision = await aj
-    .withRule(detectBot(botOptions))
-    .withRule(slidingWindow(restrictiveRateLimitSettings))
-    .protect(request, { userId });
 
-  if (decision.isDenied()) {
-    if (decision.reason.isBot()) {
-      return NextResponse.json(
-        { error: "No bots allowed", reason: decision.reason },
-        { status: 403 },
-      );
-    } else {
-      return NextResponse.json(
-        { error: "Forbidden", reason: decision.reason },
-        { status: 403 },
-      );
-    }
-  }
   try {
+    const decision = await aj
+      .withRule(detectBot(botOptions))
+      .withRule(slidingWindow(restrictiveRateLimitSettings))
+      .protect(request, { userId });
+
+    if (decision.isDenied()) {
+      if (decision.reason.isBot()) {
+        return NextResponse.json(
+          {
+            data: null,
+            message: "No bots allowed",
+            success: false,
+            error: decision.reason,
+          },
+          { status: 403 },
+        );
+      } else {
+        return NextResponse.json(
+          {
+            data: null,
+            message: "Forbidden",
+            error: decision.reason,
+            success: false,
+          },
+          { status: 403 },
+        );
+      }
+    }
     const payLoad = await request.json();
     const validated = CreateCourseSchema.safeParse(payLoad);
     if (!validated.success) {
       return NextResponse.json(
         {
-          success: false,
           data: null,
-          message: "Invalid Input",
+          message: "Validation Failed.",
+          error: validated.error,
+          success: false,
         },
         { status: 400 },
       );
     }
-    console.log(validated.data);
 
     const newCourse = await prisma.course.create({
       data: {
         ...validated.data,
-        userId: "IngQn5hVbkWLPVikHpnzSk62ndAoCoE4",
+        userId,
       },
     });
     return NextResponse.json(
       {
-        success: true,
         data: newCourse,
         message: "New Course Created",
+        error: null,
+        success: true,
       },
       { status: 201 },
     );
   } catch (error) {
-    console.log(error);
     return NextResponse.json(
       {
-        success: false,
         data: null,
         message: "Internal Server Error",
+        error: error,
+        success: false,
       },
       { status: 500 },
     );

@@ -10,9 +10,10 @@ import {
   SlidingWindowRateLimitOptions,
 } from "@arcjet/next";
 import { toNextJsHandler } from "better-auth/next-js";
-import { NextRequest, NextResponse } from "next/server";
+import { NextRequest } from "next/server";
 import { findIp } from "@arcjet/ip";
 import aj from "@/lib/arcjet";
+import { headers } from "next/headers";
 
 //* EMAIL OPTION
 const emailOptions = {
@@ -54,14 +55,19 @@ const signupOptions = {
 //* PROTECT FUNCTION
 async function protect(req: NextRequest): Promise<ArcjetDecision> {
   const session = await auth.api.getSession({
-    headers: req.headers,
+    headers: await headers(),
   });
+
+  if (session) {
+    console.log(session + "this is sessionssss");
+  }
 
   let userId: string;
   if (session?.user.id) {
     userId = session.user.id;
   } else {
-    userId = findIp(req) || "127.0.0.1";
+    const ip = findIp(req);
+    userId = ip || "127.0.0.1";
   }
 
   if (
